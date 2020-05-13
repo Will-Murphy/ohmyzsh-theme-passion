@@ -1,4 +1,4 @@
-
+# REf https://github.com/ChesterYue
 # gdate for macOS
 # REF: https://apple.stackexchange.com/questions/135742/time-in-milliseconds-since-epoch-in-the-terminal
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -36,7 +36,7 @@ function directory() {
 # git
 ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_no_bold[blue]%}git(%{$fg_no_bold[red]%}";
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%} ";
-ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg_no_bold[blue]%}) 🔥";
+ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg_no_bold[blue]%}) ✗";
 ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg_no_bold[blue]%})";
 
 function update_git_status() {
