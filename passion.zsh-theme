@@ -1,6 +1,21 @@
 # REf https://github.com/ChesterYue
 # gdate for macOS
 # REF: https://apple.stackexchange.com/questions/135742/time-in-milliseconds-since-epoch-in-the-terminal
+
+#Custom Colors [0-256]
+DIR_COLOR=244
+
+GIT_STATUS_COLOR=002
+GIT_BRANCH_COLOR=244
+GIT_DIRTY_COLOR=202
+
+ARROW_1_COLOR=002
+ARROW_2_COLOR=231
+ARROW_3_COLOR=202
+
+# Time after which to display cost and program command
+MAX_DISPLAY_COST=5
+
 if [[ "$OSTYPE" == "darwin"* ]]; then
     {
         gdate
@@ -16,7 +31,7 @@ fi
 
 # time
 function real_time() {
-    local color="%{$fg_no_bold[cyan]%}";                    # color in PROMPT need format in %{XXX%} which is not same with echo
+    local color="%{$fg_no_bold[white]%}";                    # color in PROMPT need format in %{XXX%} which is not same with echo
     local time="[$(date +%H:%M:%S)]";
     local color_reset="%{$reset_color%}";
     echo "${color}${time}${color_reset}";
@@ -25,7 +40,7 @@ function real_time() {
 
 # directory
 function directory() {
-    local color="%{$fg_no_bold[cyan]%}";
+    local color="%{$FG[$DIR_COLOR]%}";
     # REF: https://stackoverflow.com/questions/25944006/bash-current-working-directory-with-replacing-path-to-home-folder
     local directory="${PWD/#$HOME/~}";
     local color_reset="%{$reset_color%}";
@@ -34,10 +49,10 @@ function directory() {
 
 
 # git
-ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_no_bold[blue]%}git(%{$fg_no_bold[red]%}";
+ZSH_THEME_GIT_PROMPT_PREFIX="%{$FG[$GIT_STATUS_COLOR]%}git(%{$FG[$GIT_BRANCH_COLOR]%}";
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%} ";
-ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg_no_bold[blue]%}) ✗";
-ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg_no_bold[blue]%})";
+ZSH_THEME_GIT_PROMPT_DIRTY="%{$FG[$GIT_STATUS_COLOR]%})%{$FG[$GIT_DIRTY_COLOR]%}✗";
+ZSH_THEME_GIT_PROMPT_CLEAN="%{$FG[$GIT_STATUS_COLOR]%})";
 
 function update_git_status() {
     GIT_STATUS=$(git_prompt_info);
@@ -55,7 +70,7 @@ function update_command_status() {
     local reset_font="%{$fg_no_bold[white]%}";
     if $1;
     then
-        arrow="%{$fg_bold[red]%}❱%{$fg_bold[yellow]%}❱%{$fg_bold[green]%}❱";
+        arrow="%{$FG[$ARROW_1_COLOR]%}❱%{$FG[$ARROW_2_COLOR]%}❱%{$FG[$ARROW_3_COLOR]%}❱";
     else
         arrow="%{$fg_bold[red]%}❱❱❱";
     fi
@@ -75,38 +90,47 @@ output_command_execute_after() {
         return 1;
     fi
 
-    # cmd
-    local cmd="${$(fc -l | tail -1)#*  }";
-    local color_cmd="";
-    if $1;
-    then
-        color_cmd="$fg_no_bold[green]";
-    else
-        color_cmd="$fg_bold[red]";
-    fi
-    local color_reset="$reset_color";
-    cmd="${color_cmd}${cmd}${color_reset}"
-
-    # time
-    local time="[$(date +%H:%M:%S)]"
-    local color_time="$fg_no_bold[cyan]";
-    time="${color_time}${time}${color_reset}";
-
-    # cost
+    
+    # If cost is less than MAX_DISPLAY_COST, display nothing
     local time_end="$(current_time_millis)";
     local cost=$(bc -l <<<"${time_end}-${COMMAND_TIME_BEIGIN}");
-    COMMAND_TIME_BEIGIN="-20200325"
-    local length_cost=${#cost};
-    if [ "$length_cost" = "4" ];
-    then
-        cost="0${cost}"
-    fi
-    cost="[cost ${cost}s]"
-    local color_cost="$fg_no_bold[cyan]";
-    cost="${color_cost}${cost}${color_reset}";
+    if (( $(echo "$cost > $MAX_DISPLAY_COST" |bc -l) )); 
+    then 
 
-    echo -e "${time} ${cost} ${cmd}";
-    echo -e "";
+        #cost
+        COMMAND_TIME_BEIGIN="-20200325"
+        local length_cost=${#cost};
+        if [ "$length_cost" = "4" ];
+        then
+            cost="0${cost}"
+        fi
+        cost="[cost ${cost}s]"
+        local color_cost="$fg_no_bold[white]";
+        cost="${color_cost}${cost}${color_reset}";
+
+        # cmd
+        local cmd="${$(fc -l | tail -1)#*  }";
+        local color_cmd="";
+        if $1;
+        then
+            color_cmd="$fg_no_bold[green]";
+        else
+            color_cmd="$fg_bold[red]";
+        fi
+        local color_reset="$reset_color";
+        cmd="${color_cmd}${cmd}${color_reset}"
+
+        # time
+        # local time="[$(date +%H:%M:%S)]"
+        # local color_time="$fg_no_bold[white]";
+        # time="${color_time}${time}${color_reset}";
+        
+
+        # echo -e "${time} ${cost} ${cmd}";
+        
+        echo -e "${cost} ${cmd}";
+       
+    fi
 }
 
 
@@ -182,4 +206,5 @@ TRAPALRM() {
 
 
 # prompt
-PROMPT='$(real_time) $(directory) $(git_status)$(command_status) ';
+# PROMPT='$(real_time) $(directory) $(git_status)$(command_status) ';
+PROMPT='$(directory) $(git_status)$(command_status) ';
